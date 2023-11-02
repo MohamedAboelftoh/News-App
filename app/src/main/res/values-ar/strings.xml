@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NewsApp</string>
+    <string name="pick_your_category_n_of_interest">اختار الفئة الفائدة الخاصة بك</string>
+    <string name="open">افتح</string>
+    <string name="close">اغلق</string>
+    <string-array name="spinner_array">
+        <item>اختار اللغة</item>
+        <item>الانجليزيه</item>
+        <item>العربية</item>
+    </string-array>
+    <string name="setting">الاعدادات</string>
+    <string name="Categories">الفائات</string>
+    <string name="Sports">الرياضة</string>
+    <string name="Science">العلوم</string>
+    <string name="Politic">السياسة</string>
+    <string name="Business">الاعمال</string>
+    <string name="Health">الصحة</string>
+    <string name="Environment">البيئة</string>
+    <string name="news_app">برنامج اخبار</string>
+    <string name="language">اللغة</string>
+</resources>
