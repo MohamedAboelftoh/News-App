@@ -10,7 +10,7 @@ import com.example.newsapp.R
 import com.example.newsapp.databinding.FragmentCategoriesBinding
 
 class CategoriesFragment : Fragment() {
-    lateinit var viewBinding : FragmentCategoriesBinding
+    private lateinit var viewBinding : FragmentCategoriesBinding
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

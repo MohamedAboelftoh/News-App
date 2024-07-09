@@ -12,7 +12,9 @@ import com.example.newsapp.R
 import com.example.newsapp.homeFragments.SettingsFragment
 import com.example.newsapp.databinding.ActivityHomeBinding
 import com.google.android.material.search.SearchView
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
     private var categoriesFragment = CategoriesFragment()
      lateinit var viewBinding : ActivityHomeBinding

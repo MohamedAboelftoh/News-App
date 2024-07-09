@@ -2,178 +2,137 @@ package com.example.newsapp.FragmentNews
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.app.Application
 import android.content.Context
-import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.newsapp.Constant.Constant
-import com.example.newsapp.Modle.ApiManager
-import com.example.newsapp.Modle.Source
-import com.example.newsapp.Modle.SourcesResponse
-import com.example.newsapp.NewsResponce.News
-import com.example.newsapp.NewsResponce.NewsResponse
-import com.example.newsapp.search.SearchResponse
+import androidx.lifecycle.viewModelScope
+import com.example.domain.model.News
+import com.example.domain.model.Source
+import com.example.domain.model.SourcesResponse
+import com.example.domain.usecases.GetSearchedNews
+import com.example.domain.usecases.NewsUseCase
+import com.example.domain.usecases.SourcesUseCase
 import com.google.gson.Gson
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import javax.inject.Inject
 
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
-
-
-class NewsViewModel : ViewModel() {
+@HiltViewModel
+class NewsViewModel @Inject constructor(
+    private val sourcesUseCase: SourcesUseCase ,
+    private val getSearchedNews: GetSearchedNews ,
+     private val newsUseCase: NewsUseCase
+) : ViewModel() {
     @SuppressLint("StaticFieldLeak")
     private lateinit var context: Context
-    fun getContext(mContext: Context){
-                  context = mContext
-        }
-        val shouldShowLoading = MutableLiveData<Boolean>()
+    fun getContext(mContext: Context) {
+        context = mContext
+    }
+
+    val shouldShowLoading = MutableLiveData<Boolean>()
     val sources = MutableLiveData<List<Source?>?>()
     val news = MutableLiveData<List<News?>?>()
     val newsQuery = MutableLiveData<List<News?>?>()
-    fun getNewsSources(cat : String) {
-       shouldShowLoading.postValue(true)
-       // viewBinding.progressBar.isVisible = true
-        ApiManager.getApi()
-            .getSources(Constant.ApiKey, cat)
-            .enqueue(object : Callback<SourcesResponse> {
-                @SuppressLint("SuspiciousIndentation")
-                override fun onResponse(
-                    call: Call<SourcesResponse>,
-                    response: Response<SourcesResponse>
-                ) {
-                   // viewBinding.progressBar.isVisible = false
-                    shouldShowLoading.postValue(false)
-                    if (response.isSuccessful) {
-                    //    bindTabs(response.body()?.sources)
-                        sources.postValue(response.body()?.sources)
-                    } else {
-                        val errorBodyGsonString = response.errorBody()?.string()
-                        val response =
-                            Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
-                        val dialog = AlertDialog.Builder(context)
-                            dialog.setMessage(response.message.toString())
-                                .setPositiveButton(
-                                    "Try Again"
-                                ) { p0, p1 ->
-                                    p0?.dismiss()
-                                    getNewsSources(cat)
-                                }
-                                .setNegativeButton(
-                                    "Cancel"
-                                ) { p0, p1 -> p0?.dismiss() }
-                                .show()
-
+    fun getNewsSources(cat: String) {
+        shouldShowLoading.postValue(true)
+        viewModelScope.launch {
+            try {
+                val response = sourcesUseCase.getSources(cat)
+                sources.postValue(response.sources)
+            } catch (e: HttpException) {
+                val errorBodyGsonString = e.response()?.errorBody().toString()
+                val response =
+                    Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
+                val dialog = AlertDialog.Builder(context)
+                dialog.setMessage(response.message.toString())
+                    .setPositiveButton(
+                        "Try Again"
+                    ) { p0, p1 ->
+                        p0?.dismiss()
+                        getNewsSources(cat)
                     }
-                }
-
-                override fun onFailure(call: Call<SourcesResponse>, t: Throwable) {
-                   // viewBinding.progressBar.isVisible = false
-                    shouldShowLoading.postValue(false)
-                    val dialog = AlertDialog.Builder(context)
-                    dialog.setMessage(t.message)
-                        .setPositiveButton(
-                            "Try Again"
-                        ) { p0, p1 ->
-                            p0?.dismiss()
-                            getNewsSources(cat)
-                        }
-                        .setNegativeButton(
-                            "Cancel"
-                        ) { p0, p1 -> p0?.dismiss() }
-                        .show()
-                }
-
-            })
-
+                    .setNegativeButton(
+                        "Cancel"
+                    ) { p0, p1 -> p0?.dismiss() }
+                    .show()
+            } catch (e: Exception) {
+                // viewBinding.progressBar.isVisible = false
+                val dialog = AlertDialog.Builder(context)
+                dialog.setMessage(e.message)
+                    .setPositiveButton(
+                        "Try Again"
+                    ) { p0, p1 ->
+                        p0?.dismiss()
+                        getNewsSources(cat)
+                    }
+                    .setNegativeButton(
+                        "Cancel"
+                    ) { p0, p1 -> p0?.dismiss() }
+                    .show()
+            } finally {
+                shouldShowLoading.postValue(false)
+            }
+        }
     }
 
     fun getNews(sourceId: String?) {
-        //viewBinding.progressBar.isVisible = true
         shouldShowLoading.postValue(true)
-        ApiManager
-            .getApi()
-            .getNews(apiKey = Constant.ApiKey , sources = sourceId ?: "" )
-            .enqueue(object : Callback<NewsResponse>{
-                override fun onResponse(call: Call<NewsResponse>, response: Response<NewsResponse>) {
-                    //viewBinding.progressBar.isVisible = false
-                    shouldShowLoading.postValue(false)
-                    if (response.isSuccessful) {
-                       // adapter.bindNews(response.body()?.articles)
-                        news.postValue(response.body()?.articles)
-                    } else
-                    {
-                        val errorBodyGsonString = response.errorBody()?.string()
-                        val response =
-                            Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
-                        val dialog = AlertDialog.Builder(context)
-                        dialog.setMessage(response.message.toString())
-                            .setPositiveButton("Try Again"
-                            ) { p0, p1 ->
-                                p0?.dismiss()
-                                getNews(sourceId)
-                            }
-                            .setNegativeButton("Cancel"
-                            ) { p0, p1 -> p0?.dismiss() }
-                            .show()
+        viewModelScope.launch {
+            try {
+                val response = newsUseCase.getNews(sourceId!!)
+                news.postValue(response.articles)
+            } catch (e: HttpException) {
+                val errorBodyGsonString = e.response()?.errorBody()?.string()
+                val response =
+                    Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
+                val dialog = AlertDialog.Builder(context)
+                dialog.setMessage(response.message.toString())
+                    .setPositiveButton(
+                        "Try Again"
+                    ) { p0, p1 ->
+                        p0?.dismiss()
+                        getNews(sourceId)
                     }
-                }
-                override fun onFailure(call: Call<NewsResponse>, t: Throwable) {
-                    //viewBinding.progressBar.isVisible = false
-                    shouldShowLoading.postValue(false)
-                    val dialog = AlertDialog.Builder(context)
-                    dialog.setMessage(t.message)
-                        .setPositiveButton(
-                            "Try Again"
-                        ) { p0, p1 ->
-                            p0?.dismiss()
-                            getNews(sourceId)
-                        }
-                        .setNegativeButton(
-                            "Cancel"
-                        ) { p0, p1 -> p0?.dismiss() }
-                        .show()
-                }
+                    .setNegativeButton(
+                        "Cancel"
+                    ) { p0, p1 -> p0?.dismiss() }
+                    .show()
+            } catch (e: Exception) {
+                shouldShowLoading.postValue(false)
+                val dialog = AlertDialog.Builder(context)
+                dialog.setMessage(e.message)
+                    .setPositiveButton(
+                        "Try Again"
+                    ) { p0, p1 ->
+                        p0?.dismiss()
+                        getNews(sourceId)
+                    }
+                    .setNegativeButton(
+                        "Cancel"
+                    ) { p0, p1 -> p0?.dismiss() }
+                    .show()
+            }
+            finally {
+                shouldShowLoading.postValue(false)
+            }
+        }
 
-            })
     }
-    fun getNewsQuery(query: String?) {
-        ApiManager.getApi()
-            .search(Constant.ApiKey,query!!)
-            .enqueue(object :Callback<SearchResponse>{
-                @SuppressLint("SuspiciousIndentation")
-                override fun onResponse(
-                    call: Call<SearchResponse>,
-                    response: Response<SearchResponse>
-                ) {
-                    if (response.isSuccessful) {
-                        //adapter.bindNews(response.body()?.articles)
-                        newsQuery.postValue(response.body()?.articles)
-                    } else {
-                        val errorBodyGsonString = response.errorBody()?.string()
-                        val response =
-                            Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
-                        val dialog = AlertDialog.Builder(context)
-                        if(query != "") {
-                            dialog.setMessage(response.message.toString())
-                                .setPositiveButton(
-                                    "Try Again"
-                                ) { p0, p1 ->
-                                    p0?.dismiss()
-                                    getNewsQuery(query)
-                                }
-                                .setNegativeButton(
-                                    "Cancel"
-                                ) { p0, p1 -> p0?.dismiss() }
-                                .show()
-                        }
-                    }
-                }
 
-                override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
-                    val dialog = AlertDialog.Builder(context)
-                    dialog.setMessage(t.message)
+    fun getNewsQuery(query: String?) {
+        viewModelScope.launch {
+            try {
+                val response = getSearchedNews.getSearchedNews(query!!)
+                newsQuery.postValue(response.articles)
+            }
+            catch (e : HttpException){
+                val errorBodyGsonString = e.response()?.errorBody()?.string()
+                val response =
+                    Gson().fromJson(errorBodyGsonString, SourcesResponse::class.java)
+                val dialog = AlertDialog.Builder(context)
+                if (query != "") {
+                    dialog.setMessage(response.message.toString())
                         .setPositiveButton(
                             "Try Again"
                         ) { p0, p1 ->
@@ -185,8 +144,21 @@ class NewsViewModel : ViewModel() {
                         ) { p0, p1 -> p0?.dismiss() }
                         .show()
                 }
-
-            })
+            }catch (e : Exception){
+                val dialog = AlertDialog.Builder(context)
+                dialog.setMessage(e.message)
+                    .setPositiveButton(
+                        "Try Again"
+                    ) { p0, p1 ->
+                        p0?.dismiss()
+                        getNewsQuery(query)
+                    }
+                    .setNegativeButton(
+                        "Cancel"
+                    ) { p0, p1 -> p0?.dismiss() }
+                    .show()
+            }
+        }
     }
 
 }

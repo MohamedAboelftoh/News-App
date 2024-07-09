@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.bumptech.glide.Glide
-import com.example.newsapp.NewsResponce.News
 import com.example.newsapp.R
 import com.example.newsapp.databinding.ActivityDetailsBinding
 

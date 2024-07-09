@@ -1,38 +1,24 @@
 package com.example.newsapp.FragmentNews
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.newsapp.Constant.Constant
-import com.example.newsapp.HomeScreen.HomeActivity
-import com.example.newsapp.Modle.ApiManager
-import com.example.newsapp.Modle.Source
-import com.example.newsapp.Modle.SourcesResponse
-import com.example.newsapp.NewsResponce.News
-import com.example.newsapp.NewsResponce.NewsResponse
+import com.example.domain.model.News
+import com.example.domain.model.Source
 import com.example.newsapp.R
 import com.example.newsapp.databinding.FragmentNewsBinding
 import com.example.newsapp.newsDetalis.DetailsActivity
-import com.example.newsapp.search.SearchResponse
 import com.google.android.material.tabs.TabLayout
-import com.google.gson.Gson
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
+import dagger.hilt.android.AndroidEntryPoint
+@AndroidEntryPoint
 class NewsFragment : Fragment()  {
-lateinit var viewBinding : FragmentNewsBinding
+private lateinit var viewBinding : FragmentNewsBinding
 lateinit var source: Source
 private lateinit var viewModel : NewsViewModel
     override fun onCreateView(
@@ -135,11 +121,7 @@ private lateinit var viewModel : NewsViewModel
     }
     private var searchQuery: String? = null
     fun updateSearchQuery(newText: String?) {
-        // Update the fragment's search query
-        // This method will be called from the activity's onQueryTextChange callback
         searchQuery = newText
-        // Perform any relevant search query update logic here
-        // Update the search results in the fragment
         updateSearchResults()
     }
     private fun updateSearchResults() {
@@ -147,7 +129,5 @@ private lateinit var viewModel : NewsViewModel
         viewModel.getNewsQuery(searchQuery)
         else
             viewModel.getNews(source.id)
-        // Use the searchQuery to update the search results in the fragment
-        // For example, update the UI with the search results
     }
 }

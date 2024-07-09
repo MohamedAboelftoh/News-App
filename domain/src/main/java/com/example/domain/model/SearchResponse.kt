@@ -1,8 +1,7 @@
-package com.example.newsapp.search
+package com.example.domain.model
 
 import kotlinx.parcelize.Parcelize
 import android.os.Parcelable
-import com.example.newsapp.NewsResponce.News
 import com.google.gson.annotations.SerializedName
 
 @Parcelize
